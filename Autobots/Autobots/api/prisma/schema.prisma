@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  // connection URL moved to prisma.config.ts
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  role      Role     @default(USER)
+  requests  AccessRequest[]
+  approvedRequests AccessRequest[] @relation("approved_by")
+  auditLogs AuditLog[] @relation("UserAudits")
+  
+  @@index([email])
+  @@index([role])
+}
+
+model Resource {
+  id          String   @id @default(uuid())
+  name        String
+  sensitivity Sensitivity @default(INTERNAL)
+  requests    AccessRequest[]
+}
+
+model AccessRequest {
+  id            String    @id @default(uuid())
+  userId        String
+  resourceId    String
+  status        Status    @default(PENDING)
+  justification String
+  riskScore     Int       @default(50)
+  durationHours Int
+  expiresAt     DateTime?
+  approverId    String?
+  user          User      @relation(fields: [userId], references: [id])
+  resource      Resource  @relation(fields: [resourceId], references: [id])
+  approver      User?     @relation("approved_by", fields: [approverId], references: [id])
+  
+  @@index([status, userId])
+  @@index([riskScore])
+}
+
+model AuditLog {
+  id        BigInt   @id @default(autoincrement())
+  requestId String?
+  actorId   String
+  action    Action
+  details   Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id], name: "UserAudits")
+  
+  @@index([requestId])
+  @@index([createdAt])
+}
+
+enum Role {
+  USER
+  ADMIN
+  AUDITOR
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum Sensitivity {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+}
+
+enum Action {
+  CREATE
+  APPROVE
+  REJECT
+  VIEW
+  MODIFY
+}
