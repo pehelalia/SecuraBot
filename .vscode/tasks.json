@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "frontend: dev",
+      "type": "shell",
+      "command": "cmd",
+      "args": ["/c", "npm run dev"],
+      "options": { "cwd": "${workspaceFolder}/secura-gov" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: dev",
+      "type": "shell",
+      "command": "cmd",
+      "args": ["/c", "npm run dev"],
+      "options": { "cwd": "${workspaceFolder}/api" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "dev: all",
+      "dependsOn": ["frontend: dev", "backend: dev"],
+      "runOptions": { "runOn": "folderOpen" }
+    }
+  ]
+}
